@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>driveTime</title>
+  <meta name="description" content="Is driving faster worth it? Compare arrival time against gas cost and crash risk for the same car, in city traffic or on the interstate.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%232563eb'/><path d='M16 16 L23 10' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>drive<span>Time</span></h1>
+      <p class="tag">Same car, same trip. Is driving faster worth the gas and the risk?</p>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <section class="card controls" aria-label="Trip settings">
+      <h2>Your trip</h2>
+
+      <div class="seg" role="radiogroup" aria-label="Road type">
+        <button type="button" data-road="interstate" role="radio">Interstate</button>
+        <button type="button" data-road="mixed" role="radio">Mixed</button>
+        <button type="button" data-road="city" role="radio">City</button>
+      </div>
+
+      <label class="field">
+        <span>Distance</span>
+        <div class="inp"><input id="distance" type="number" min="1" max="3000" step="1"><em>miles</em></div>
+      </label>
+
+      <label class="field" id="shareField">
+        <span>City streets <output id="cityShareOut"></output></span>
+        <input id="cityShare" type="range" min="5" max="95" step="5">
+      </label>
+
+      <div class="two">
+        <label class="field" id="hwyLimitField">
+          <span>Interstate limit</span>
+          <div class="inp"><input id="hwyLimit" type="number" min="40" max="85" step="5"><em>mph</em></div>
+        </label>
+        <label class="field" id="cityLimitField">
+          <span>City limit</span>
+          <div class="inp"><input id="cityLimit" type="number" min="15" max="55" step="5"><em>mph</em></div>
+        </label>
+      </div>
+
+      <h2>Your car &amp; you</h2>
+      <div class="two">
+        <label class="field">
+          <span>Highway MPG</span>
+          <div class="inp"><input id="mpg" type="number" min="5" max="150" step="1"><em>mpg</em></div>
+        </label>
+        <label class="field">
+          <span>Gas price</span>
+          <div class="inp"><em class="pre">$</em><input id="gasPrice" type="number" min="0" max="20" step="0.05"><em>/gal</em></div>
+        </label>
+      </div>
+      <label class="field">
+        <span>What an hour of your time is worth</span>
+        <div class="inp"><em class="pre">$</em><input id="timeValue" type="number" min="0" max="1000" step="1"><em>/hr</em></div>
+      </label>
+      <label class="field">
+        <span>Leave at</span>
+        <div class="inp"><input id="leaveAt" type="time" value="08:00"></div>
+      </label>
+
+      <details class="adv">
+        <summary>Assumptions</summary>
+        <div class="two" id="cityAdv">
+          <label class="field">
+            <span>Traffic lights</span>
+            <div class="inp"><input id="lightsPerMile" type="number" min="0" max="20" step="0.5"><em>/mile</em></div>
+          </label>
+          <label class="field">
+            <span>Red light length</span>
+            <div class="inp"><input id="redSeconds" type="number" min="10" max="180" step="5"><em>sec</em></div>
+          </label>
+        </div>
+        <label class="field">
+          <span>Crash cost per mile at the limit</span>
+          <div class="inp"><em class="pre">$</em><input id="crashCostPerMile" type="number" min="0" max="5" step="0.01"><em>/mi</em></div>
+        </label>
+        <label class="check"><input id="includeRisk" type="checkbox"> Count crash risk as a cost</label>
+        <p class="note">The default crash cost is roughly the US average economic cost of crashes spread over every mile driven. Risk grows with the square of your speed relative to the limit, and the fatal crash risk with the fourth power.</p>
+        <button type="button" id="reset" class="link">Reset to defaults</button>
+      </details>
+    </section>
+
+    <section class="results" aria-live="polite">
+      <div class="card hero">
+        <div class="speedrow">
+          <div>
+            <h2>How fast do you drive?</h2>
+            <p class="speeds" id="speedsLabel"></p>
+          </div>
+          <div class="offset" id="offsetLabel"></div>
+        </div>
+        <input id="offset" type="range" min="-10" max="25" step="1" aria-label="Miles per hour over the limit">
+        <div class="ticks"><span>10 under</span><span>at the limit</span><span>25 over</span></div>
+
+        <div class="verdict" id="verdict"></div>
+
+        <div class="stats">
+          <div class="stat"><span>Arrive</span><strong id="sArrive"></strong><small id="sTime"></small></div>
+          <div class="stat"><span>Time saved</span><strong id="sSaved"></strong><small>vs. the limit</small></div>
+          <div class="stat"><span>Extra gas</span><strong id="sGas"></strong><small id="sGal"></small></div>
+          <div class="stat"><span>Crash risk</span><strong id="sRisk"></strong><small id="sFatal"></small></div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <figure class="card chart">
+          <figcaption>Trip time</figcaption>
+          <svg id="chartTime" viewBox="0 0 360 200" role="img" aria-label="Trip time by speed"></svg>
+        </figure>
+        <figure class="card chart">
+          <figcaption>Trip cost <span class="legend"><i class="sw fuel"></i>Gas <i class="sw risk"></i>Risk</span></figcaption>
+          <svg id="chartCost" viewBox="0 0 360 200" role="img" aria-label="Trip cost by speed"></svg>
+        </figure>
+      </div>
+
+      <div class="card">
+        <h2>Every speed, side by side</h2>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Speed</th><th>Trip time</th><th>Saved</th><th>MPG</th><th>Gas</th><th>Risk</th><th>Cost per hour saved</th>
+              </tr>
+            </thead>
+            <tbody id="table"></tbody>
+          </table>
+        </div>
+        <p class="note">"Cost per hour saved" is the extra gas and crash cost divided by the hours you save compared with driving the limit. If it's more than your time is worth, the speed isn't paying for itself. Click a row to try that speed.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>Estimates for comparing speeds, not predictions. Fuel use grows with aerodynamic drag above ~50 mph. City trips assume lights timed for the limit, so speeding catches more reds. Tickets aren't counted. <a href="https://github.com/chrsjnsn/driveTime">Source on GitHub</a></p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
