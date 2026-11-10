@@ -13,7 +13,7 @@ python3 -m http.server 8000
 # then open http://localhost:8000
 ```
 
-To publish it, turn on GitHub Pages for this repo (Settings → Pages → Deploy from branch → `main`, `/ (root)`).
+It's published at **https://drivetime.jensen.me** on Cloudflare Workers (static assets). [`wrangler.jsonc`](wrangler.jsonc) holds the config, including the custom domain, and [`.assetsignore`](.assetsignore) keeps repo files like this README off the site. With the repo connected under Workers & Pages, every push to `main` redeploys; to deploy by hand, run `npx wrangler deploy`.
 
 ## How the model works
 

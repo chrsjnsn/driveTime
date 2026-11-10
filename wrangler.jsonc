@@ -1,0 +1,13 @@
+{
+  // Cloudflare Workers static-assets deploy for driveTime (no build step).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "drivetime",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./"
+  },
+  "routes": [
+    { "pattern": "drivetime.jensen.me", "custom_domain": true }
+  ],
+  "workers_dev": true
+}
